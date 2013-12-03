@@ -66,17 +66,43 @@ describe "Generating BCrypt hashes" do
     expect(BCrypt::Engine.hash_secret(false, @salt)).to eq BCrypt::Engine.hash_secret("false", @salt)
   end
 
-  specify "should be interoperable with other implementations" do
+  describe "should be interoperable with other implementations" do
+    BCRYPT_SALT_PREFIX_LENGTH = 7 + 22 + 1
+
     # test vectors from the OpenWall implementation <http://www.openwall.com/crypt/>
     test_vectors = [
-      ["U*U", "$2a$05$CCCCCCCCCCCCCCCCCCCCC.", "$2a$05$CCCCCCCCCCCCCCCCCCCCC.E5YPO9kmyuRGyh0XouQYb4YMJKvyOeW"],
-      ["U*U*", "$2a$05$CCCCCCCCCCCCCCCCCCCCC.", "$2a$05$CCCCCCCCCCCCCCCCCCCCC.VGOzA784oUp/Z0DY336zx7pLYAy0lwK"],
-      ["U*U*U", "$2a$05$XXXXXXXXXXXXXXXXXXXXXO", "$2a$05$XXXXXXXXXXXXXXXXXXXXXOAcXxm9kjPGEMsLznoKqmqw7tc8WCx4a"],
-      ["", "$2a$05$CCCCCCCCCCCCCCCCCCCCC.", "$2a$05$CCCCCCCCCCCCCCCCCCCCC.7uG0VCzI2bS7j6ymqJi9CdcdxiRTWNy"],
-      ["0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", "$2a$05$abcdefghijklmnopqrstuu", "$2a$05$abcdefghijklmnopqrstuu5s2v8.iXieOjg/.AySBTTZIIVFJeBui"]
+      ["$2a$05$CCCCCCCCCCCCCCCCCCCCC.E5YPO9kmyuRGyh0XouQYb4YMJKvyOeW",
+          "U*U"],
+      ["$2a$05$CCCCCCCCCCCCCCCCCCCCC.VGOzA784oUp/Z0DY336zx7pLYAy0lwK",
+          "U*U*"],
+      ["$2a$05$XXXXXXXXXXXXXXXXXXXXXOAcXxm9kjPGEMsLznoKqmqw7tc8WCx4a",
+          "U*U*U"],
+      ["$2a$05$abcdefghijklmnopqrstuu5s2v8.iXieOjg/.AySBTTZIIVFJeBui",
+          "0123456789abcdefghijklmnopqrstuvwxyz" +
+	  "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" +
+	  "chars after 72 are ignored"],
+      ["$2a$05$/OK.fbVrR/bpIqNJ5ianF.Sa7shbm4.OzKpvFnX1pQLmQW96oUlCq",
+          "\xa3"],
+      ["$2a$05$/OK.fbVrR/bpIqNJ5ianF.nRht2l/HRhr6zmCp9vYUvvsqynflf9e",
+          "\xff\xa3" "345"],
+      ["$2a$05$/OK.fbVrR/bpIqNJ5ianF.6IflQkJytoRVc1yuaNtHfiuq.FRlSIS",
+          "\xa3" "ab"],
+      ["$2a$05$/OK.fbVrR/bpIqNJ5ianF.swQOIzjOiJ9GHEPuhEkvqrUyvWhEMx6",
+          "\xaa"*72],
+      ["$2a$05$/OK.fbVrR/bpIqNJ5ianF.swQOIzjOiJ9GHEPuhEkvqrUyvWhEMx6",
+          "\xaa"*72 + "chars after 72 are ignored as usual"],
+      ["$2a$05$/OK.fbVrR/bpIqNJ5ianF.R9xrDjiycxMbQE2bp.vgqlYpW5wx2yy",
+          "\xaa\x55"*36],
+      ["$2a$05$/OK.fbVrR/bpIqNJ5ianF.9tQZzcJfm3uj2NvJ/n5xkhpqLrMpWCe",
+          "\x55\xaa\xff"*24],
+      ["$2a$05$CCCCCCCCCCCCCCCCCCCCC.7uG0VCzI2bS7j6ymqJi9CdcdxiRTWNy",
+          ""],
     ]
-    for secret, salt, test_vector in test_vectors
-      expect(BCrypt::Engine.hash_secret(secret, salt)).to eql(test_vector)
+    test_vectors.each_with_index do |(test_vector, secret), i|
+      specify("with Secret ##{i}") do
+        salt = test_vector[0, BCRYPT_SALT_PREFIX_LENGTH - 1] # extract salt from test vector
+        expect(BCrypt::Engine.hash_secret(secret, salt)).to eql(test_vector)
+      end
     end
   end
 end
