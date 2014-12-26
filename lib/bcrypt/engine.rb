@@ -46,7 +46,14 @@ module BCrypt
       if valid_secret?(secret)
         if valid_salt?(salt)
           if RUBY_PLATFORM == "java"
-            Java.bcrypt_jruby.BCrypt.hashpw(secret.to_s, salt.to_s)
+            # the native C bcrypt implementation used by the MRI version of this gem
+            # interprets secret as a null-terminated string; to ensure consistency,
+            # we drop after any null byte
+            trimmed = secret.to_s.split("\0").first # drop after null byte to emulate C
+
+            # the java hashpw() method taking byte[] expects the null terminator
+            bytes = (trimmed.to_s + "\0").to_java_bytes # add null byte for byte[] API
+            Java.bcrypt_jruby.BCrypt.hashpw(bytes, salt.to_s)
           else
             __bc_crypt(secret.to_s, salt)
           end

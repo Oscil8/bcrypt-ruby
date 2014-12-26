@@ -18,6 +18,8 @@ import java.io.UnsupportedEncodingException;
 
 import java.security.SecureRandom;
 
+import java.util.Arrays;
+
 /**
  * BCrypt implements OpenBSD-style Blowfish password hashing using
  * the scheme described in "A Future-Adaptable Password Scheme" by
@@ -59,7 +61,7 @@ import java.security.SecureRandom;
  * 10, and the valid range is 4 to 31.
  *
  * @author Damien Miller
- * @version 0.2
+ * @version 0.3 + patch: https://github.com/Oscil8/jBCrypt/tree/djm-byte-array
  */
 public class BCrypt {
 	// BCrypt parameters
@@ -646,9 +648,28 @@ public class BCrypt {
 	 * @return	the hashed password
 	 */
 	public static String hashpw(String password, String salt) {
+		byte passwordb[];
+
+		try {
+			passwordb = (password + "\000").getBytes("UTF-8");
+		} catch (UnsupportedEncodingException uee) {
+			throw new AssertionError("UTF-8 is not supported");
+		}
+
+		return hashpw(passwordb, salt);
+	}
+
+	/**
+	 * Hash a password using the OpenBSD bcrypt scheme
+	 * @param passwordb	the password to hash, as a 0-terminated byte array
+	 * @param salt	the salt to hash with (perhaps generated
+	 * using BCrypt.gensalt)
+	 * @return	the hashed password
+	 */
+	public static String hashpw(byte passwordb[], String salt) {
 		BCrypt B;
 		String real_salt;
-		byte passwordb[], saltb[], hashed[];
+		byte saltb[], hashed[];
 		char minor = (char)0;
 		int rounds, off = 0;
 		StringBuilder rs = new StringBuilder();
@@ -670,13 +691,11 @@ public class BCrypt {
 		rounds = Integer.parseInt(salt.substring(off, off + 2));
 
 		real_salt = salt.substring(off + 3, off + 25);
-		try {
-			passwordb = (password + (minor >= 'a' ? "\000" : "")).getBytes("UTF-8");
-		} catch (UnsupportedEncodingException uee) {
-			throw new AssertionError("UTF-8 is not supported");
-		}
-
 		saltb = decode_base64(real_salt, BCRYPT_SALT_LEN);
+
+		// Remove null terminator for $2$ prefix
+		if (minor < 'a')
+			passwordb = Arrays.copyOf(passwordb, passwordb.length - 1);
 
 		B = new BCrypt();
 		hashed = B.crypt_raw(passwordb, saltb, rounds);
@@ -747,6 +766,17 @@ public class BCrypt {
 	 * @return	true if the passwords match, false otherwise
 	 */
 	public static boolean checkpw(String plaintext, String hashed) {
+		return (hashed.compareTo(hashpw(plaintext, hashed)) == 0);
+	}
+
+	/**
+	 * Check that a plaintext byte[] password matches a previously hashed
+	 * one
+	 * @param plaintext	the plaintext password to verify
+	 * @param hashed	the previously-hashed password
+	 * @return	true if the passwords match, false otherwise
+	 */
+	public static boolean checkpw(byte[] plaintext, String hashed) {
 		return (hashed.compareTo(hashpw(plaintext, hashed)) == 0);
 	}
 }
