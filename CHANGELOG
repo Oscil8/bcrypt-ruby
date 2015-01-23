@@ -76,3 +76,6 @@
 
 3.1.9  Oct 23 2014
   - Rebuild corrupt binaries
+
+3.2.0  Jan 23, 2014
+  - Lookout fork: fix jBCrypt handling of binary strings

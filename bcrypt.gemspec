@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
-  s.name = 'bcrypt'
-  s.version = '3.1.9'
+  s.name = 'lookout-bcrypt'
+  s.version = '3.2.0'
 
   s.summary = "OpenBSD's bcrypt() password hashing algorithm."
   s.description = <<-EOF
@@ -22,8 +22,8 @@ Gem::Specification.new do |s|
 
   s.extensions = 'ext/mri/extconf.rb'
 
-  s.authors = ["Coda Hale"]
-  s.email = "coda.hale@gmail.com"
-  s.homepage = "https://github.com/codahale/bcrypt-ruby"
+  s.authors = ["Coda Hale", "Ariel Salomon"]
+  s.email = "ariel.salomon@gmail.com"
+  s.homepage = "https://github.com/Oscil8/bcrypt-ruby"
   s.license = "MIT"
 end
