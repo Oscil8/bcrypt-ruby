@@ -77,5 +77,14 @@
 3.1.9  Oct 23 2014
   - Rebuild corrupt binaries
 
-3.2.0  Jan 23, 2014
-  - Lookout fork: fix jBCrypt handling of binary strings
+3.1.10 Jan 28 2015
+  - Fix issue with dumping a BCrypt::Password instance to YAML in Ruby 2.2 [GH #107 by @mattwildig]
+
+
+Lookout fork:
+
+3.2.0  Jan 23 2014
+  - fix jBCrypt handling of binary strings
+
+3.2.1 Feb 10 2015
+  - merge fixes from 3.1.10

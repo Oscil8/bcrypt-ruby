@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'lookout-bcrypt'
-  s.version = '3.2.0'
+  s.version = '3.2.1'
 
   s.summary = "OpenBSD's bcrypt() password hashing algorithm."
   s.description = <<-EOF
